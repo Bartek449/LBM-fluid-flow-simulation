@@ -12,44 +12,20 @@ void Simulation::streaming() {
     for (size_t i = 1; i < rows - 1; i++) {
         for (size_t j = 1; j < columns - 1; j++) {
             Cell& current_cell = s.get_element(i, j);
-            array<double, 4> fun_ex = current_cell.get_fun(FUN_EX);
+            array<double, 9> fun_ex = current_cell.get_fun(FUN_EX);
+            for (int d = 0; d < fun_ex.size(); d++)
+            {
+                if (fun_ex[d]) {
+                    Cell& moving_cell = s.get_element(i + VELOCITY_FACTOR[d][0], j + VELOCITY_FACTOR[d][1]);
+                    if (moving_cell.get_fun(FUN_IN) != WALL) {
+                        next_matrix.get_element(i + VELOCITY_FACTOR[d][0], j + VELOCITY_FACTOR[d][1]).set_direct_fun(FUN_IN, d, fun_ex[d]);
+                    }
 
-            if (fun_ex[0]) {
-                Cell& right_cell = s.get_element(i, j + 1);
-                if (right_cell.get_fun(FUN_IN) == WALL) {
-                    next_matrix.get_element(i, j).set_direct_fun(FUN_IN, 2, fun_ex[0]);
-                }
-                else {
-                    next_matrix.get_element(i, j + 1).set_direct_fun(FUN_IN,0, fun_ex[0]);
+
                 }
             }
-            if (fun_ex[1]) {
-                Cell& down_cell = s.get_element(i + 1, j);
-                if (down_cell.get_fun(FUN_IN) == WALL) {
-                    next_matrix.get_element(i, j).set_direct_fun(FUN_IN, 3, fun_ex[1]);
-                }
-                else {
-                    next_matrix.get_element(i + 1, j).set_direct_fun(FUN_IN, 1, fun_ex[1]);
-                }
-            }
-            if (fun_ex[2]) {
-                Cell& left_cell = s.get_element(i, j - 1);
-                if (left_cell.get_fun(FUN_IN) == WALL) {
-                    next_matrix.get_element(i, j).set_direct_fun(FUN_IN, 0, fun_ex[2]);
-                }
-                else {
-                    next_matrix.get_element(i, j - 1).set_direct_fun(FUN_IN, 2, fun_ex[2]);
-                }
-            }
-            if (fun_ex[3]) {
-                Cell& up_cell = s.get_element(i - 1, j);
-                if (up_cell.get_fun(FUN_IN) == WALL) {
-                    next_matrix.get_element(i, j).set_direct_fun(FUN_IN, 1, fun_ex[3]);
-                }
-                else {
-                    next_matrix.get_element(i - 1, j).set_direct_fun(FUN_IN, 3, fun_ex[3]);
-                }
-            }
+
+           
         }
     }
 
@@ -67,6 +43,7 @@ void Simulation::collision() {
             Cell& next_cell = next_matrix.get_element(i, j);
             if (s.get_element(i, j).get_fun(FUN_IN) != WALL) {
                 next_cell.calculate_density();
+                next_cell.calculate_velocity();
                 next_cell.calculate_fun_eq();
                 next_cell.calculate_fun_ex();
             }

@@ -1,8 +1,8 @@
 #include"Cell.h"
 
-Cell::Cell() : fun_in(EMPTY), fun_ex(EMPTY), fun_eq(EMPTY), density(0) {}
+Cell::Cell() : fun_in(EMPTY), fun_ex(EMPTY), fun_eq(EMPTY), velocity({ 0,0 }), density(0) {}
 
-Cell::Cell(array<double, 9> i) : fun_in(i), fun_ex(EMPTY), fun_eq(EMPTY), density(0){
+Cell::Cell(array<double, 9> i) : fun_in(i), fun_ex(EMPTY), fun_eq(EMPTY), velocity({ 0,0 }), density(0){
     calculate_density();
     calculate_velocity();
 }
@@ -40,7 +40,6 @@ double Cell::get_density() { return density; }
 
 
 void::Cell::calculate_velocity() {
-    calculate_density();
     velocity[0] = (fun_in[1] + fun_in[5] + fun_in[8] - fun_in[2] - fun_in[6] - fun_in[7])/density;
     velocity[1] = (fun_in[3] + fun_in[5] + fun_in[6] - fun_in[4] - fun_in[7] - fun_in[8]) / density;
 }
@@ -58,8 +57,8 @@ void Cell::calculate_density()
 void Cell::calculate_fun_eq() { 
     
     for (int i = 0; i < 9; ++i) {
-        double sc = (CI[i][0] * velocity[0]) + (CI[i][0] * velocity[1]);
-        fun_eq[i] = (density * WEIGHT[i])*(1+ 3*sc + 4.5 * pow(sc,2) - 1.5 * (pow(velocity[0], 2) + pow(velocity[1], 2)));
+        double sc = (VELOCITY_FACTOR[i][0] * velocity[0]) + (VELOCITY_FACTOR[i][1] * velocity[1]);
+        fun_eq[i] = (density * WEIGHT_FACTOR[i])*(1+ 3*sc + 4.5 * pow(sc,2) - 1.5 * (pow(velocity[0], 2) + pow(velocity[1], 2)));
     } 
 }
 

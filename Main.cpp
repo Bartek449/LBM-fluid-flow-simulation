@@ -145,7 +145,7 @@ int main() {
             logic_clock.restart();
             updateTextureData(simulation, pixelData, rows, columns);
 
-            simulation.streaming();
+            //simulation.streaming();
             simulation.collision();
             
             glBindTexture(GL_TEXTURE_2D, texture);
