@@ -13,19 +13,29 @@ void Simulation::streaming() {
         for (size_t j = 1; j < columns - 1; j++) {
             Cell& current_cell = s.get_element(i, j);
             array<double, 9> fun_ex = current_cell.get_fun(FUN_EX);
+
             for (int d = 0; d < fun_ex.size(); d++)
             {
-                if (fun_ex[d]) {
-                    Cell& moving_cell = s.get_element(i + VELOCITY_FACTOR[d][0], j + VELOCITY_FACTOR[d][1]);
-                    if (moving_cell.get_fun(FUN_IN) != WALL) {
-                        next_matrix.get_element(i + VELOCITY_FACTOR[d][0], j + VELOCITY_FACTOR[d][1]).set_direct_fun(FUN_IN, d, fun_ex[d]);
-                    }
+                if (fun_ex[d] != 0)
+                {
+                    int ni = i + VELOCITY_FACTOR[d][0];
+                    int nj = j + VELOCITY_FACTOR[d][1];
+                    int opposite_d = (d + 4) % 8;
 
+                    if (ni >= 0 && ni < rows && nj >= 0 && nj < columns) {
+                        Cell& moving_cell = s.get_element(ni, nj);
+                        if (moving_cell.get_fun(FUN_IN) != WALL) {
+                            next_matrix.get_element(ni, nj).set_direct_fun(FUN_IN, d, fun_ex[d]);
+                        }
+                        else {
+                            next_matrix.get_element(i, j).set_direct_fun(FUN_IN, opposite_d, fun_ex[d]);
+                        }
+                    }
 
                 }
             }
 
-           
+
         }
     }
 

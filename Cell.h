@@ -6,9 +6,9 @@
 using namespace std;
 
 constexpr array<double, 9> EMPTY = { 0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0 };
-constexpr array<double, 9> STARTING_STATE = { 0.25,0.25,0.25,0.25,0.25,0.25,0.25,0.25,0.25 };
 constexpr array<double, 9> WALL = { -1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0,-1.0 };
-constexpr array<double, 9> WEIGHT_FACTOR = { 4/9, 1/9, 1/9, 1/9, 1/ 9, 1/36, 1/36, 1/36, 1/36 };
+constexpr array<double, 9> STARTING_STATE = { 0.25,0.25,0.25,0.25,0.25,0.25,0.25,0.25,0.25 };
+constexpr array<double, 9> WEIGHT_FACTOR = { 4.0 / 9, 1.0 / 9, 1.0 / 9, 1.0 / 9, 1.0 / 9, 1.0 / 36, 1.0 / 36, 1.0 / 36, 1.0 / 36 }; 
 constexpr array<array<double, 2>, 9> VELOCITY_FACTOR = { { {{0, 0}}, {{1, 0}}, {{-1, 0}}, {{0, 1}},{{0, -1}}, {{1, 1}}, {{-1, 1}}, {{-1, -1}}, {{1, -1}}} };
 constexpr double RELAXATION_TIME = 0.75;
 
@@ -28,6 +28,7 @@ public:
 
     void set_fun(FunType, array<double,9>);
     void set_direct_fun(FunType, int, double);
+    void set_density(double);
     void set_velocity(array<double,2>);
     void set_direct_velocity(int, double);
 
