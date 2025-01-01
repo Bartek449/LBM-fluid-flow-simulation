@@ -59,10 +59,10 @@ void Cell::calculate_density()
 }
 
 void Cell::calculate_fun_eq() { 
-    
+    double u2 = pow(velocity[0], 2) + pow(velocity[1], 2);
     for (int i = 0; i < 9; ++i) {
         double sc = (VELOCITY_FACTOR[i][0] * velocity[0]) + (VELOCITY_FACTOR[i][1] * velocity[1]);
-        fun_eq[i] = (density * WEIGHT_FACTOR[i])*(1+ 3*sc + 4.5 * pow(sc,2) - 1.5 * (pow(velocity[0], 2) + pow(velocity[1], 2)));
+        fun_eq[i] = (density * WEIGHT_FACTOR[i]) * (1 + 3 * sc + 4.5 * pow(sc, 2) - 1.5 * u2);
     } 
 }
 

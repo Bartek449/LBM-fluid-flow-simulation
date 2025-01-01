@@ -33,6 +33,19 @@ const char* fragmentShaderSource = R"(
         }
     )";
 
+void updateTextureData(Simulation& simulation, vector<float>& pixelData, int rows, int columns) {
+    for (size_t i = 0; i < rows; ++i) {
+        for (size_t j = 0; j < columns; ++j) {
+            Cell cell = simulation.get_matrix().get_element(i, j);
+            float color;
+            if (cell.get_fun(FUN_IN) == WALL) color = -1.0f;
+            else color = 1 - cell.get_density();
+
+            pixelData[i * columns + j] = color;
+        }
+    }
+}
+
 void checkShaderCompilation(GLuint shader, const string& shaderType) {
     GLint success;
     glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
@@ -42,6 +55,7 @@ void checkShaderCompilation(GLuint shader, const string& shaderType) {
         throw runtime_error(shaderType + " Shader Compilation Failed: " + string(infoLog));
     }
 }
+
 void checkProgramLinking(GLuint program) {
     GLint success;
     glGetProgramiv(program, GL_LINK_STATUS, &success);
@@ -49,19 +63,6 @@ void checkProgramLinking(GLuint program) {
         char infoLog[512];
         glGetProgramInfoLog(program, 512, NULL, infoLog);
         throw runtime_error("Shader Program Linking Failed: " + string(infoLog));
-    }
-}
-
-void updateTextureData(Simulation& simulation, vector<float>& pixelData, int rows, int columns) {
-    for (size_t i = 0; i < rows; ++i) {
-        for (size_t j = 0; j < columns; ++j) {
-            Cell cell = simulation.get_matrix().get_element(i, j);
-            float color;
-            if (cell.get_fun(FUN_IN) == WALL) color = -1.0f;
-            else color = 1 - cell.get_density();
-             
-            pixelData[i * columns + j] = color;
-        }
     }
 }
 
@@ -129,6 +130,8 @@ int main() {
 
     sf::Clock logic_clock, render_clock;
 
+    int n = 0;
+
     while (window.isOpen()) {
         sf::Event event;
         while (window.pollEvent(event)) {
@@ -137,17 +140,20 @@ int main() {
             if (event.type == sf::Event::KeyPressed) {
                 if (event.key.code == sf::Keyboard::Escape)
                     window.close();
-
             }
         }
 
-        if (logic_clock.getElapsedTime().asMilliseconds() >= 8) {
+        if (logic_clock.getElapsedTime().asMilliseconds() >= 100) {
             logic_clock.restart();
             updateTextureData(simulation, pixelData, rows, columns);
 
             simulation.collision();
             simulation.streaming();
-            
+
+            n++;
+
+            cout << "Iteracja: " << n << endl;
+
             glBindTexture(GL_TEXTURE_2D, texture);
             glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, columns, rows, GL_RED, GL_FLOAT, pixelData.data());
         }

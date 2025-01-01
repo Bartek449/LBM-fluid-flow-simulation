@@ -14,7 +14,7 @@ void Simulation::streaming() {
             Cell& current_cell = s.get_element(i, j);
             array<double, 9> fun_ex = current_cell.get_fun(FUN_EX);
 
-            for (int d = 0; d < fun_ex.size(); d++)
+            for (int d = 0; d < 9; d++)
             {
                 if (fun_ex[d] != 0)
                 {
