@@ -23,7 +23,6 @@ void Matrix::prepare_environment() {
 			if (i == 0 || i == rows - 1 || j == 0 || j == columns - 1 || (j == columns / 3 && (i < rows / 2 - 3 || i > rows / 2 + 3))) currentCell.set_fun(FUN_IN,WALL);
 			if (i > 0 && i < rows - 1 && j > 0 && j < columns / 3) currentCell.set_fun(FUN_IN, STARTING_STATE);
 			else currentCell.set_fun(FUN_IN, STARTING_STATE_2);
-
 		}
 	}
 }
