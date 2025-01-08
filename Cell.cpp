@@ -58,6 +58,13 @@ void Cell::calculate_density()
 
 }
 
+void Cell::calculate_fun_in() {
+    
+    for (int i = 0; i < 9; ++i) {
+        fun_in[i] = density/9;
+    }
+}
+
 void Cell::calculate_fun_eq() { 
     double u2 = pow(velocity[0], 2) + pow(velocity[1], 2);
     for (int i = 0; i < 9; ++i) {

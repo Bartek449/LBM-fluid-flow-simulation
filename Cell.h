@@ -25,6 +25,7 @@ public:
 
     void calculate_velocity();
     void calculate_density();
+    void calculate_fun_in();
     void calculate_fun_eq();
     void calculate_fun_ex();
 };
