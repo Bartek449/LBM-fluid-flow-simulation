@@ -21,27 +21,49 @@ const char* fragmentShaderSource = R"(
         in vec2 texCoord;
         out vec4 FragColor;
 
-        uniform sampler2D uTexture;
+        uniform sampler2D uTextureX;
+        uniform sampler2D uTextureY;
 
         void main() {
-            float color = texture(uTexture, texCoord).r;
-            if (color == -1.0) { 
-                FragColor = vec4(0.58, 0.29, 0.0, 1.0); 
-            } else {
-                FragColor = vec4(color, color, color, 1.0); 
-            }
-        }
+
+        float u_x = texture(uTextureX, texCoord).r;
+        float u_y = texture(uTextureY, texCoord).r;
+
+    
+        if (u_x == -69.0 && u_y == -69.0) {
+            FragColor = vec4(0.58, 0.29, 0.0, 1.0);
+        } else {
+        
+            vec3 colorX = (u_x > 0.0) 
+                ? vec3(u_x, 0.0, 0.0)     
+                : vec3(0.0, 0.0, -u_x);  
+
+            vec3 colorY = (u_y > 0.0) 
+                ? vec3(0.0, u_y, 0.0)      
+                : vec3(0.0, 0.0, -u_y * 0.5); 
+
+        
+            vec3 combinedColor = clamp(colorX + colorY, 0.0, 1.0);
+            FragColor = vec4(combinedColor, 1.0);
+    }
+}
+
     )";
 
-void updateTextureData(Simulation& simulation, vector<float>& pixelData, int rows, int columns) {
+void updateTextureData(Simulation& simulation, vector<float>& pixelDataX, vector<float>& pixelDataY, int rows, int columns) {
     for (size_t i = 0; i < rows; ++i) {
         for (size_t j = 0; j < columns; ++j) {
             Cell cell = simulation.get_matrix().get_element(i, j);
-            float color;
-            if (cell.get_fun(FUN_IN) == WALL) color = -1.0f;
-            else color = 1 - cell.get_density();
+            
+            if (cell.get_fun(FUN_IN) == WALL) {
+                pixelDataX[i * columns + j] = -69;
+                pixelDataY[i * columns + j] = -69;
+            }
+            else {
+                pixelDataX[i * columns + j] = cell.get_velocity()[0];
+                pixelDataY[i * columns + j] = cell.get_velocity()[1];
+            }
 
-            pixelData[i * columns + j] = color;
         }
     }
 }
@@ -96,14 +118,22 @@ int main() {
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
-    GLuint texture;
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
+    GLuint textureX, textureY;
+    glGenTextures(1, &textureX);
+    glGenTextures(1, &textureY);
+
+    glBindTexture(GL_TEXTURE_2D, textureX);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, columns, rows, 0, GL_RED, GL_FLOAT, nullptr);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-    vector<float> pixelData(rows * columns);
+    glBindTexture(GL_TEXTURE_2D, textureY);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, columns, rows, 0, GL_RED, GL_FLOAT, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    vector<float> pixelDataX(rows * columns);
+    vector<float> pixelDataY(rows * columns);
 
     GLuint shaderProgram = glCreateProgram();
 
@@ -126,7 +156,8 @@ int main() {
     glDeleteShader(fragmentShader);
 
     glUseProgram(shaderProgram);
-    glUniform1i(glGetUniformLocation(shaderProgram, "uTexture"), 0);
+    glUniform1i(glGetUniformLocation(shaderProgram, "uTextureX"), 0);
+    glUniform1i(glGetUniformLocation(shaderProgram, "uTextureY"), 1);
 
     sf::Clock logic_clock, render_clock;
 
@@ -143,9 +174,9 @@ int main() {
             }
         }
 
-        if (logic_clock.getElapsedTime().asMilliseconds() >= 100) {
+        if (logic_clock.getElapsedTime().asMilliseconds() >= 8) {
             logic_clock.restart();
-            updateTextureData(simulation, pixelData, rows, columns);
+            updateTextureData(simulation, pixelDataX, pixelDataY, rows, columns);
 
             simulation.collision();
             simulation.streaming();
@@ -154,8 +185,13 @@ int main() {
 
             cout << "Iteracja: " << n << endl;
 
-            glBindTexture(GL_TEXTURE_2D, texture);
-            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, columns, rows, GL_RED, GL_FLOAT, pixelData.data());
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, textureX);
+            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, columns, rows, GL_RED, GL_FLOAT, pixelDataX.data());
+
+            glActiveTexture(GL_TEXTURE1);
+            glBindTexture(GL_TEXTURE_2D, textureY);
+            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, columns, rows, GL_RED, GL_FLOAT, pixelDataY.data());
         }
 
         if (render_clock.getElapsedTime().asMilliseconds() >= 16) {
@@ -168,7 +204,8 @@ int main() {
 
     glDeleteBuffers(1, &vbo);
     glDeleteVertexArrays(1, &vao);
-    glDeleteTextures(1, &texture);
+    glDeleteTextures(1, &textureX);
+    glDeleteTextures(1, &textureY);
     glDeleteProgram(shaderProgram);
 
     return 0;
