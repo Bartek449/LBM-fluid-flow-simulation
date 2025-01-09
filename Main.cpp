@@ -17,38 +17,43 @@ const char* vertexShaderSource = R"(
     )";
 
 const char* fragmentShaderSource = R"(
-        #version 330 core
-        in vec2 texCoord;
-        out vec4 FragColor;
+    #version 330 core
+    in vec2 texCoord;
+    out vec4 FragColor;
 
-        uniform sampler2D uTextureX;
-        uniform sampler2D uTextureY;
+    uniform sampler2D uTextureX;
+    uniform sampler2D uTextureY;
 
-        void main() {
-
+    void main() {
         float u_x = texture(uTextureX, texCoord).r;
         float u_y = texture(uTextureY, texCoord).r;
 
-    
-        if (u_x == -69.0 && u_y == -69.0) {
+        if (u_x == 111 && u_y == 111) {
             FragColor = vec4(0.58, 0.29, 0.0, 1.0);
         } else {
-        
-            vec3 colorX = (u_x > 0.0) 
-                ? vec3(u_x, 0.0, 0.0)     
-                : vec3(0.0, 0.0, -u_x);  
+            vec3 colorX;
+            vec3 colorY;
 
-            vec3 colorY = (u_y > 0.0) 
-                ? vec3(0.0, u_y, 0.0)      
-                : vec3(0.0, 0.0, -u_y * 0.5); 
+            if (u_x > 0.0) {
+                colorX = vec3(u_x, 0.0, 0.0); 
+            } else {
+                colorX = vec3(0.0, 0.0, -u_x); 
+            }
 
-        
-            vec3 combinedColor = clamp(colorX + colorY, 0.0, 1.0);
-            FragColor = vec4(combinedColor, 1.0);
+            if (u_y > 0.0) {
+                colorY = vec3(u_y, 0.0, 0.0); 
+            } else {
+                colorY = vec3(0.0, 0.0, -u_y);
+            }
+            vec3 combinedColor = clamp(colorX + colorY, 0.0, 1.0); 
+            FragColor = vec4(combinedColor, 1.0); 
+        }
     }
-}
+)";
 
-    )";
+
+
+ 
 
 void updateTextureData(Simulation& simulation, vector<float>& pixelDataX, vector<float>& pixelDataY, int rows, int columns) {
     for (size_t i = 0; i < rows; ++i) {
@@ -56,8 +61,8 @@ void updateTextureData(Simulation& simulation, vector<float>& pixelDataX, vector
             Cell cell = simulation.get_matrix().get_element(i, j);
             
             if (cell.get_fun(FUN_IN) == WALL) {
-                pixelDataX[i * columns + j] = -69;
-                pixelDataY[i * columns + j] = -69;
+                pixelDataX[i * columns + j] = 111;
+                pixelDataY[i * columns + j] = 111;
             }
             else {
                 pixelDataX[i * columns + j] = cell.get_velocity()[0];
