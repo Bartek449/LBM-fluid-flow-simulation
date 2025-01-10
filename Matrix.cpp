@@ -24,9 +24,9 @@ void Matrix::prepare_environment() {
 			else {
 				if (i > 0 && i < rows - 1 && j > 0 && j < columns / 3) currentCell.set_density(1.0);
 				else currentCell.set_density(0.75);
-				
+
 				currentCell.calculate_fun_in();
-				
+
 			}
 		}
 	}

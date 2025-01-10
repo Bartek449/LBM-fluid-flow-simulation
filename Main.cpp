@@ -1,3 +1,4 @@
+
 #include <SFML/Window.hpp>
 #include <GL/glew.h>
 
@@ -53,13 +54,13 @@ const char* fragmentShaderSource = R"(
 
 
 
- 
+
 
 void updateTextureData(Simulation& simulation, vector<float>& pixelDataX, vector<float>& pixelDataY, int rows, int columns) {
     for (size_t i = 0; i < rows; ++i) {
         for (size_t j = 0; j < columns; ++j) {
             Cell cell = simulation.get_matrix().get_element(i, j);
-            
+
             if (cell.get_fun(FUN_IN) == WALL) {
                 pixelDataX[i * columns + j] = 111;
                 pixelDataY[i * columns + j] = 111;
@@ -99,7 +100,11 @@ int main() {
     Simulation simulation(rows, columns);
     simulation.get_matrix().prepare_environment();
 
-    sf::Window window(sf::VideoMode(800, 600), "LGA Simulation", sf::Style::Default, sf::ContextSettings(24));
+
+    sf::Window windowuUx(sf::VideoMode(400, 280), "U_x", sf::Style::Default, sf::ContextSettings(24));
+    sf::Window windowUy(sf::VideoMode(400, 280), "U_y", sf::Style::Default, sf::ContextSettings(24));
+    sf::Window simulationWindow(sf::VideoMode(800, 600), "LGA Simulation", sf::Style::Default, sf::ContextSettings(24));
+    simulationWindow.setActive(true);
     glewInit();
 
     GLuint vao, vbo;
@@ -123,19 +128,21 @@ int main() {
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
-    GLuint textureX, textureY;
-    glGenTextures(1, &textureX);
-    glGenTextures(1, &textureY);
+    GLuint textureUx, textureUy;
+    glGenTextures(1, &textureUx); 
+    glGenTextures(1, &textureUy); 
 
-    glBindTexture(GL_TEXTURE_2D, textureX);
+    glBindTexture(GL_TEXTURE_2D, textureUx);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, columns, rows, 0, GL_RED, GL_FLOAT, nullptr);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-    glBindTexture(GL_TEXTURE_2D, textureY);
+
+    glBindTexture(GL_TEXTURE_2D, textureUy);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, columns, rows, 0, GL_RED, GL_FLOAT, nullptr);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
 
     vector<float> pixelDataX(rows * columns);
     vector<float> pixelDataY(rows * columns);
@@ -168,14 +175,14 @@ int main() {
 
     int n = 0;
 
-    while (window.isOpen()) {
+    while (simulationWindow.isOpen()) {
         sf::Event event;
-        while (window.pollEvent(event)) {
+        while (simulationWindow.pollEvent(event)) {
             if (event.type == sf::Event::Closed)
-                window.close();
+                simulationWindow.close();
             if (event.type == sf::Event::KeyPressed) {
                 if (event.key.code == sf::Keyboard::Escape)
-                    window.close();
+                    simulationWindow.close();
             }
         }
 
@@ -190,27 +197,53 @@ int main() {
 
             cout << "Iteracja: " << n << endl;
 
+            windowuUx.setActive(true); 
             glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, textureX);
+            glBindTexture(GL_TEXTURE_2D, textureUx);
             glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, columns, rows, GL_RED, GL_FLOAT, pixelDataX.data());
 
+            glClear(GL_COLOR_BUFFER_BIT); 
+            glDrawArrays(GL_TRIANGLE_FAN, 0, 4); 
+            windowuUx.display(); 
+
+            windowUy.setActive(true); 
             glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, textureY);
+            glBindTexture(GL_TEXTURE_2D, textureUy);
             glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, columns, rows, GL_RED, GL_FLOAT, pixelDataY.data());
+
+            glClear(GL_COLOR_BUFFER_BIT); 
+            glDrawArrays(GL_TRIANGLE_FAN, 0, 4); 
+            windowUy.display(); 
         }
 
         if (render_clock.getElapsedTime().asMilliseconds() >= 16) {
             render_clock.restart();
+
+            simulationWindow.setActive(true);
             glClear(GL_COLOR_BUFFER_BIT);
             glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-            window.display();
+            simulationWindow.display();
+
+            windowuUx.setActive(true);
+            glActiveTexture(GL_TEXTURE0); 
+            glBindTexture(GL_TEXTURE_2D, textureUx);
+            glClear(GL_COLOR_BUFFER_BIT);
+            glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+            windowuUx.display();
+
+            windowUy.setActive(true);
+            glActiveTexture(GL_TEXTURE1); 
+            glBindTexture(GL_TEXTURE_2D, textureUy);
+            glClear(GL_COLOR_BUFFER_BIT);
+            glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+            windowUy.display();
         }
     }
 
     glDeleteBuffers(1, &vbo);
     glDeleteVertexArrays(1, &vao);
-    glDeleteTextures(1, &textureX);
-    glDeleteTextures(1, &textureY);
+    glDeleteTextures(1, &textureUx);
+    glDeleteTextures(1, &textureUy);
     glDeleteProgram(shaderProgram);
 
     return 0;
