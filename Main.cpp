@@ -1,4 +1,3 @@
-
 #include <SFML/Window.hpp>
 #include <GL/glew.h>
 
@@ -100,11 +99,7 @@ int main() {
     Simulation simulation(rows, columns);
     simulation.get_matrix().prepare_environment();
 
-
-    sf::Window windowuUx(sf::VideoMode(400, 280), "U_x", sf::Style::Default, sf::ContextSettings(24));
-    sf::Window windowUy(sf::VideoMode(400, 280), "U_y", sf::Style::Default, sf::ContextSettings(24));
-    sf::Window simulationWindow(sf::VideoMode(800, 600), "LGA Simulation", sf::Style::Default, sf::ContextSettings(24));
-    simulationWindow.setActive(true);
+    sf::Window window(sf::VideoMode(800, 600), "LGA Simulation", sf::Style::Default, sf::ContextSettings(24));
     glewInit();
 
     GLuint vao, vbo;
@@ -128,21 +123,19 @@ int main() {
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
-    GLuint textureUx, textureUy;
-    glGenTextures(1, &textureUx); 
-    glGenTextures(1, &textureUy); 
+    GLuint textureX, textureY;
+    glGenTextures(1, &textureX);
+    glGenTextures(1, &textureY);
 
-    glBindTexture(GL_TEXTURE_2D, textureUx);
+    glBindTexture(GL_TEXTURE_2D, textureX);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, columns, rows, 0, GL_RED, GL_FLOAT, nullptr);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-
-    glBindTexture(GL_TEXTURE_2D, textureUy);
+    glBindTexture(GL_TEXTURE_2D, textureY);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, columns, rows, 0, GL_RED, GL_FLOAT, nullptr);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
 
     vector<float> pixelDataX(rows * columns);
     vector<float> pixelDataY(rows * columns);
@@ -175,14 +168,14 @@ int main() {
 
     int n = 0;
 
-    while (simulationWindow.isOpen()) {
+    while (window.isOpen()) {
         sf::Event event;
-        while (simulationWindow.pollEvent(event)) {
+        while (window.pollEvent(event)) {
             if (event.type == sf::Event::Closed)
-                simulationWindow.close();
+                window.close();
             if (event.type == sf::Event::KeyPressed) {
                 if (event.key.code == sf::Keyboard::Escape)
-                    simulationWindow.close();
+                    window.close();
             }
         }
 
@@ -197,53 +190,27 @@ int main() {
 
             cout << "Iteracja: " << n << endl;
 
-            windowuUx.setActive(true); 
             glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, textureUx);
+            glBindTexture(GL_TEXTURE_2D, textureX);
             glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, columns, rows, GL_RED, GL_FLOAT, pixelDataX.data());
 
-            glClear(GL_COLOR_BUFFER_BIT); 
-            glDrawArrays(GL_TRIANGLE_FAN, 0, 4); 
-            windowuUx.display(); 
-
-            windowUy.setActive(true); 
             glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, textureUy);
+            glBindTexture(GL_TEXTURE_2D, textureY);
             glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, columns, rows, GL_RED, GL_FLOAT, pixelDataY.data());
-
-            glClear(GL_COLOR_BUFFER_BIT); 
-            glDrawArrays(GL_TRIANGLE_FAN, 0, 4); 
-            windowUy.display(); 
         }
 
         if (render_clock.getElapsedTime().asMilliseconds() >= 16) {
             render_clock.restart();
-
-            simulationWindow.setActive(true);
             glClear(GL_COLOR_BUFFER_BIT);
             glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-            simulationWindow.display();
-
-            windowuUx.setActive(true);
-            glActiveTexture(GL_TEXTURE0); 
-            glBindTexture(GL_TEXTURE_2D, textureUx);
-            glClear(GL_COLOR_BUFFER_BIT);
-            glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-            windowuUx.display();
-
-            windowUy.setActive(true);
-            glActiveTexture(GL_TEXTURE1); 
-            glBindTexture(GL_TEXTURE_2D, textureUy);
-            glClear(GL_COLOR_BUFFER_BIT);
-            glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-            windowUy.display();
+            window.display();
         }
     }
 
     glDeleteBuffers(1, &vbo);
     glDeleteVertexArrays(1, &vao);
-    glDeleteTextures(1, &textureUx);
-    glDeleteTextures(1, &textureUy);
+    glDeleteTextures(1, &textureX);
+    glDeleteTextures(1, &textureY);
     glDeleteProgram(shaderProgram);
 
     return 0;

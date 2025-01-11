@@ -5,6 +5,7 @@ Simulation::Simulation(int rows, int columns) : s(rows, columns) {}
 Matrix& Simulation::get_matrix() { return s; }
 
 void Simulation::streaming() {
+    constexpr array<int, 9> OPPOSITE_DIRECTION = { 0, 2, 1, 4, 3, 6, 5, 8, 7 };
     Matrix next_matrix = s;
     int rows = s.get_rows_num();
     int columns = s.get_columns_num();
@@ -14,13 +15,11 @@ void Simulation::streaming() {
             Cell& current_cell = s.get_element(i, j);
             array<double, 9> fun_ex = current_cell.get_fun(FUN_EX);
 
-            for (int d = 0; d < 9; d++)
-            {
-                if (fun_ex[d] != 0)
-                {
+            for (int d = 0; d < 9; d++) {
+                if (fun_ex[d] != 0) {
                     int ni = i + VELOCITY_FACTOR[d][0];
                     int nj = j + VELOCITY_FACTOR[d][1];
-                    int opposite_d = (d + 4) % 8;
+                    int opposite_d = OPPOSITE_DIRECTION[d]; 
 
                     if (ni >= 0 && ni < rows && nj >= 0 && nj < columns) {
                         Cell& moving_cell = s.get_element(ni, nj);
@@ -31,11 +30,8 @@ void Simulation::streaming() {
                             next_matrix.get_element(i, j).set_direct_fun(FUN_IN, opposite_d, fun_ex[d]);
                         }
                     }
-
                 }
             }
-
-
         }
     }
 

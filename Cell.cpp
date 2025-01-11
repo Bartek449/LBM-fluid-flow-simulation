@@ -44,7 +44,8 @@ double Cell::get_density() { return density; }
 
 
 void Cell::calculate_velocity() {
-    velocity[0] = (fun_in[1] + fun_in[5] + fun_in[8] - fun_in[2] - fun_in[6] - fun_in[7])/density;
+    calculate_density();
+    velocity[0] = (fun_in[1] + fun_in[5] + fun_in[8] - fun_in[2] - fun_in[6] - fun_in[7]) / density;
     velocity[1] = (fun_in[3] + fun_in[5] + fun_in[6] - fun_in[4] - fun_in[7] - fun_in[8]) / density;
 }
 
@@ -59,9 +60,8 @@ void Cell::calculate_density()
 }
 
 void Cell::calculate_fun_in() {
-    
     for (int i = 0; i < 9; ++i) {
-        fun_in[i] = density/9;
+        fun_in[i] = density / 9;
     }
 }
 
