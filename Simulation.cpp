@@ -5,10 +5,20 @@ Simulation::Simulation(int rows, int columns) : s(rows, columns) {}
 Matrix& Simulation::get_matrix() { return s; }
 
 void Simulation::streaming() {
-    constexpr array<int, 9> OPPOSITE_DIRECTION = { 0, 2, 1, 4, 3, 6, 5, 8, 7 };
     Matrix next_matrix = s;
     int rows = s.get_rows_num();
     int columns = s.get_columns_num();
+
+    for (size_t i = 0; i < rows; i++) {
+        for (size_t j = 0; j < columns; j++) {
+            if (s.get_element(i, j).get_fun(FUN_IN) != WALL) {
+                next_matrix.get_element(i, j).set_fun(FUN_IN, EMPTY);
+                next_matrix.get_element(i, j).set_fun(FUN_EQ, EMPTY);
+                next_matrix.get_element(i, j).set_fun(FUN_EQ, EMPTY);
+            }
+        }
+    }
+
 
     for (size_t i = 1; i < rows - 1; i++) {
         for (size_t j = 1; j < columns - 1; j++) {
@@ -19,15 +29,15 @@ void Simulation::streaming() {
                 if (fun_ex[d] != 0) {
                     int ni = i + VELOCITY_FACTOR[d][0];
                     int nj = j + VELOCITY_FACTOR[d][1];
-                    int opposite_d = OPPOSITE_DIRECTION[d]; 
+                    int opposite_d = OPPOSITE_DIRECTION[d];
 
                     if (ni >= 0 && ni < rows && nj >= 0 && nj < columns) {
-                        Cell& moving_cell = s.get_element(ni, nj);
-                        if (moving_cell.get_fun(FUN_IN) != WALL) {
-                            next_matrix.get_element(ni, nj).set_direct_fun(FUN_IN, d, fun_ex[d]);
+                        Cell& target_cell = next_matrix.get_element(ni, nj);
+                        if (target_cell.get_fun(FUN_IN) != WALL) {
+                            target_cell.set_direct_fun(FUN_IN, d, target_cell.get_fun(FUN_IN)[d] + fun_ex[d]);
                         }
                         else {
-                            next_matrix.get_element(i, j).set_direct_fun(FUN_IN, opposite_d, fun_ex[d]);
+                            current_cell.set_direct_fun(FUN_IN, opposite_d, current_cell.get_fun(FUN_IN)[opposite_d] + fun_ex[d]);
                         }
                     }
                 }

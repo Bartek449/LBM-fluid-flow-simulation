@@ -1,8 +1,7 @@
 #include <SFML/Window.hpp>
 #include <GL/glew.h>
-
 #include "Simulation.h"
-
+#include <thread>
 const char* vertexShaderSource = R"(
         #version 330 core
         layout(location = 0) in vec2 aPos;
@@ -30,22 +29,26 @@ const char* fragmentShaderSource = R"(
 
         if (u_x == 111 && u_y == 111) {
             FragColor = vec4(0.58, 0.29, 0.0, 1.0);
-        } else {
+        } 
+        else {
             vec3 colorX;
             vec3 colorY;
 
             if (u_x > 0.0) {
-                colorX = vec3(u_x, 0.0, 0.0); 
-            } else {
-                colorX = vec3(0.0, 0.0, -u_x); 
+                colorX = vec3(1.0, 1.0 - u_x * 1.5, 1.0 - u_x * 1.5); 
+            } 
+            else {
+                colorX = vec3(1.0 - (-u_x * 1.5), 1.0 - (-u_x * 1.5), 1.0); 
             }
 
             if (u_y > 0.0) {
-                colorY = vec3(u_y, 0.0, 0.0); 
-            } else {
-                colorY = vec3(0.0, 0.0, -u_y);
+                colorY = vec3(1.0, 1.0 - u_y * 1.5, 1.0 - u_y * 1.5); 
+            } 
+            else {
+                colorY = vec3(1.0 - (-u_y * 1.5), 1.0 - (-u_y * 1.5), 1.0); 
             }
-            vec3 combinedColor = clamp(colorX + colorY, 0.0, 1.0); 
+
+            vec3 combinedColor = clamp(colorX + colorY - vec3(1.0), 0.0, 1.0); 
             FragColor = vec4(combinedColor, 1.0); 
         }
     }
@@ -55,7 +58,14 @@ const char* fragmentShaderSource = R"(
 
 
 
-void updateTextureData(Simulation& simulation, vector<float>& pixelDataX, vector<float>& pixelDataY, int rows, int columns) {
+enum class DisplayMode {
+    VelocityBoth,
+    VelocityX,
+    VelocityY
+};
+
+void updateTextureData(Simulation& simulation, std::vector<float>& pixelDataX, std::vector<float>& pixelDataY,
+    int rows, int columns, DisplayMode mode) {
     for (size_t i = 0; i < rows; ++i) {
         for (size_t j = 0; j < columns; ++j) {
             Cell cell = simulation.get_matrix().get_element(i, j);
@@ -65,10 +75,20 @@ void updateTextureData(Simulation& simulation, vector<float>& pixelDataX, vector
                 pixelDataY[i * columns + j] = 111;
             }
             else {
-                pixelDataX[i * columns + j] = cell.get_velocity()[0];
-                pixelDataY[i * columns + j] = cell.get_velocity()[1];
-            }
+                if (mode == DisplayMode::VelocityBoth || mode == DisplayMode::VelocityX) {
+                    pixelDataX[i * columns + j] = cell.get_velocity()[0];
+                }
+                else {
+                    pixelDataX[i * columns + j] = 0.0f;
+                }
 
+                if (mode == DisplayMode::VelocityBoth || mode == DisplayMode::VelocityY) {
+                    pixelDataY[i * columns + j] = cell.get_velocity()[1];
+                }
+                else {
+                    pixelDataY[i * columns + j] = 0.0f;
+                }
+            }
         }
     }
 }
@@ -93,16 +113,11 @@ void checkProgramLinking(GLuint program) {
     }
 }
 
-int main() {
-    const int rows = 50, columns = 109;
-
-    Simulation simulation(rows, columns);
-    simulation.get_matrix().prepare_environment();
-
-    sf::Window window(sf::VideoMode(800, 600), "LGA Simulation", sf::Style::Default, sf::ContextSettings(24));
+void runSimulationWindow(const std::string& windowName, int rows, int columns, int width, int height, DisplayMode mode) {
+    sf::Window window(sf::VideoMode(width, height), windowName, sf::Style::Default, sf::ContextSettings(24));
     glewInit();
 
-    GLuint vao, vbo;
+    GLuint vao, vbo, textureX, textureY;
     glGenVertexArrays(1, &vao);
     glGenBuffers(1, &vbo);
 
@@ -123,22 +138,17 @@ int main() {
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
-    GLuint textureX, textureY;
     glGenTextures(1, &textureX);
-    glGenTextures(1, &textureY);
-
     glBindTexture(GL_TEXTURE_2D, textureX);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, columns, rows, 0, GL_RED, GL_FLOAT, nullptr);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
+    glGenTextures(1, &textureY);
     glBindTexture(GL_TEXTURE_2D, textureY);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, columns, rows, 0, GL_RED, GL_FLOAT, nullptr);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-    vector<float> pixelDataX(rows * columns);
-    vector<float> pixelDataY(rows * columns);
 
     GLuint shaderProgram = glCreateProgram();
 
@@ -164,31 +174,26 @@ int main() {
     glUniform1i(glGetUniformLocation(shaderProgram, "uTextureX"), 0);
     glUniform1i(glGetUniformLocation(shaderProgram, "uTextureY"), 1);
 
-    sf::Clock logic_clock, render_clock;
+    Simulation simulation(rows, columns);
+    simulation.get_matrix().prepare_environment();
 
-    int n = 0;
+    std::vector<float> pixelDataX(rows * columns);
+    std::vector<float> pixelDataY(rows * columns);
+
+    sf::Clock logicClock, renderClock;
 
     while (window.isOpen()) {
         sf::Event event;
         while (window.pollEvent(event)) {
             if (event.type == sf::Event::Closed)
                 window.close();
-            if (event.type == sf::Event::KeyPressed) {
-                if (event.key.code == sf::Keyboard::Escape)
-                    window.close();
-            }
         }
 
-        if (logic_clock.getElapsedTime().asMilliseconds() >= 8) {
-            logic_clock.restart();
-            updateTextureData(simulation, pixelDataX, pixelDataY, rows, columns);
-
+        if (logicClock.getElapsedTime().asMilliseconds() >= 100) {
+            logicClock.restart();
+            updateTextureData(simulation, pixelDataX, pixelDataY, rows, columns, mode);
             simulation.collision();
             simulation.streaming();
-
-            n++;
-
-            cout << "Iteracja: " << n << endl;
 
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, textureX);
@@ -199,19 +204,33 @@ int main() {
             glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, columns, rows, GL_RED, GL_FLOAT, pixelDataY.data());
         }
 
-        if (render_clock.getElapsedTime().asMilliseconds() >= 16) {
-            render_clock.restart();
+
+        if (renderClock.getElapsedTime().asMilliseconds() >= 16) {
+            renderClock.restart();
             glClear(GL_COLOR_BUFFER_BIT);
             glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
             window.display();
         }
     }
 
+
     glDeleteBuffers(1, &vbo);
     glDeleteVertexArrays(1, &vao);
     glDeleteTextures(1, &textureX);
     glDeleteTextures(1, &textureY);
     glDeleteProgram(shaderProgram);
+}
+
+int main() {
+    const int rows = 50, columns = 109;
+
+    thread window1Thread(runSimulationWindow, "Simulation LBM", rows, columns, 800, 600, DisplayMode::VelocityBoth);
+    thread window2Thread(runSimulationWindow, "Horizontal Velocity", rows, columns, 400, 280, DisplayMode::VelocityX);
+    thread window3Thread(runSimulationWindow, "Vertical Velocity", rows, columns, 400, 280, DisplayMode::VelocityY);
+
+    window1Thread.join();
+    window2Thread.join();
+    window3Thread.join();
 
     return 0;
 }

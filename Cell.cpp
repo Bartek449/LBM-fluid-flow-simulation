@@ -59,17 +59,13 @@ void Cell::calculate_density()
 
 }
 
-void Cell::calculate_fun_in() {
-    for (int i = 0; i < 9; ++i) {
-        fun_in[i] = density / 9;
-    }
-}
-
 void Cell::calculate_fun_eq() { 
     double u2 = pow(velocity[0], 2) + pow(velocity[1], 2);
     for (int i = 0; i < 9; ++i) {
         double sc = (VELOCITY_FACTOR[i][0] * velocity[0]) + (VELOCITY_FACTOR[i][1] * velocity[1]);
         fun_eq[i] = (density * WEIGHT_FACTOR[i]) * (1 + 3 * sc + 4.5 * pow(sc, 2) - 1.5 * u2);
+        if (fun_eq[i] > 1.0) fun_eq[i] = 1.0;
+        if (fun_eq[i] < 0.0) fun_eq[i] = 0.0;
     } 
 }
 
@@ -77,5 +73,7 @@ void Cell::calculate_fun_ex()
 { 
     for (int i = 0; i < 9; ++i) {
         fun_ex[i] = fun_in[i] + (1.0 / RELAXATION_TIME) * (fun_eq[i] - fun_in[i]);
+        if (fun_ex[i] > 1.0) fun_ex[i] = 1.0;
+        if (fun_ex[i] < 0.0) fun_ex[i] = 0.0;
      }
 }
