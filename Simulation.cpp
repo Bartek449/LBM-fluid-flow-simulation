@@ -14,7 +14,7 @@ void Simulation::streaming() {
             if (s.get_element(i, j).get_fun(FUN_IN) != WALL) {
                 next_matrix.get_element(i, j).set_fun(FUN_IN, EMPTY);
                 next_matrix.get_element(i, j).set_fun(FUN_EQ, EMPTY);
-                next_matrix.get_element(i, j).set_fun(FUN_EQ, EMPTY);
+                next_matrix.get_element(i, j).set_fun(FUN_EX, EMPTY);
             }
         }
     }

@@ -16,7 +16,9 @@ void Cell::set_fun(FunType f, array<double,9> i) {
     else if (f == FUN_EQ) fun_eq = i;
 }
 
+
 void Cell::set_direct_fun(FunType f, int index, double num) {
+    if (num < 0.0) num = 0.0;
     if (f == FUN_IN)fun_in[index] = num;
     else if (f == FUN_EX) fun_ex[index] = num;
     else if (f == FUN_EQ) fun_eq[index] = num;
@@ -44,7 +46,6 @@ double Cell::get_density() { return density; }
 
 
 void Cell::calculate_velocity() {
-    calculate_density();
     velocity[0] = (fun_in[1] + fun_in[5] + fun_in[8] - fun_in[2] - fun_in[6] - fun_in[7]) / density;
     velocity[1] = (fun_in[3] + fun_in[5] + fun_in[6] - fun_in[4] - fun_in[7] - fun_in[8]) / density;
 }
@@ -64,8 +65,6 @@ void Cell::calculate_fun_eq() {
     for (int i = 0; i < 9; ++i) {
         double sc = (VELOCITY_FACTOR[i][0] * velocity[0]) + (VELOCITY_FACTOR[i][1] * velocity[1]);
         fun_eq[i] = (density * WEIGHT_FACTOR[i]) * (1 + 3 * sc + 4.5 * pow(sc, 2) - 1.5 * u2);
-        if (fun_eq[i] > 1.0) fun_eq[i] = 1.0;
-        if (fun_eq[i] < 0.0) fun_eq[i] = 0.0;
     } 
 }
 
@@ -73,7 +72,5 @@ void Cell::calculate_fun_ex()
 { 
     for (int i = 0; i < 9; ++i) {
         fun_ex[i] = fun_in[i] + (1.0 / RELAXATION_TIME) * (fun_eq[i] - fun_in[i]);
-        if (fun_ex[i] > 1.0) fun_ex[i] = 1.0;
-        if (fun_ex[i] < 0.0) fun_ex[i] = 0.0;
      }
 }
