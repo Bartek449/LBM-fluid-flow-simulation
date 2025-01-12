@@ -29,6 +29,7 @@ const char* fragmentShaderSource = R"(
 
         if (u_x == 111 && u_y == 111) {
             FragColor = vec4(0.58, 0.29, 0.0, 1.0);
+            FragColor = vec4(1.0, 1.0, 1.0, 1.0);
         } 
         else {
             vec3 colorX;
@@ -64,7 +65,7 @@ enum class DisplayMode {
     VelocityY
 };
 
-void updateTextureData(Simulation& simulation, std::vector<float>& pixelDataX, std::vector<float>& pixelDataY,
+void updateTextureData(Simulation& simulation, vector<float>& pixelDataX, vector<float>& pixelDataY,
     int rows, int columns, DisplayMode mode) {
     for (size_t i = 0; i < rows; ++i) {
         for (size_t j = 0; j < columns; ++j) {
@@ -113,7 +114,7 @@ void checkProgramLinking(GLuint program) {
     }
 }
 
-void runSimulationWindow(const std::string& windowName, int rows, int columns, int width, int height, DisplayMode mode) {
+void runSimulationWindow(const string& windowName, int rows, int columns, int width, int height, DisplayMode mode) {
     sf::Window window(sf::VideoMode(width, height), windowName, sf::Style::Default, sf::ContextSettings(24));
     glewInit();
 
@@ -177,23 +178,26 @@ void runSimulationWindow(const std::string& windowName, int rows, int columns, i
     Simulation simulation(rows, columns);
     simulation.get_matrix().prepare_environment();
 
-    std::vector<float> pixelDataX(rows * columns);
-    std::vector<float> pixelDataY(rows * columns);
+    vector<float> pixelDataX(rows * columns);
+    vector<float> pixelDataY(rows * columns);
 
     sf::Clock logicClock, renderClock;
-
+    int n = 0;
     while (window.isOpen()) {
         sf::Event event;
         while (window.pollEvent(event)) {
             if (event.type == sf::Event::Closed)
                 window.close();
         }
-
+       
         if (logicClock.getElapsedTime().asMilliseconds() >= 100) {
+            
             logicClock.restart();
             updateTextureData(simulation, pixelDataX, pixelDataY, rows, columns, mode);
             simulation.collision();
             simulation.streaming();
+            n++;
+            cout << "Okno: " << windowName << ", iteracja: " << n << endl;
 
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, textureX);
@@ -224,13 +228,13 @@ void runSimulationWindow(const std::string& windowName, int rows, int columns, i
 int main() {
     const int rows = 50, columns = 109;
 
-    thread window1Thread(runSimulationWindow, "Simulation LBM", rows, columns, 800, 600, DisplayMode::VelocityBoth);
+    //thread window1Thread(runSimulationWindow, "Simulation LBM", rows, columns, 800, 600, DisplayMode::VelocityBoth);
     thread window2Thread(runSimulationWindow, "Horizontal Velocity", rows, columns, 400, 280, DisplayMode::VelocityX);
-    thread window3Thread(runSimulationWindow, "Vertical Velocity", rows, columns, 400, 280, DisplayMode::VelocityY);
+    //thread window3Thread(runSimulationWindow, "Vertical Velocity", rows, columns, 400, 280, DisplayMode::VelocityY);
 
-    window1Thread.join();
+    //window1Thread.join();
     window2Thread.join();
-    window3Thread.join();
+    //window3Thread.join();
 
     return 0;
 }

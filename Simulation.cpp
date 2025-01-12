@@ -37,7 +37,8 @@ void Simulation::streaming() {
                             target_cell.set_direct_fun(FUN_IN, d, target_cell.get_fun(FUN_IN)[d] + fun_ex[d]);
                         }
                         else {
-                            current_cell.set_direct_fun(FUN_IN, opposite_d, current_cell.get_fun(FUN_IN)[opposite_d] + fun_ex[d]);
+                           Cell& same_cell = next_matrix.get_element(i, j);
+                           same_cell.set_direct_fun(FUN_IN, opposite_d, same_cell.get_fun(FUN_IN)[opposite_d] + fun_ex[d]);
                         }
                     }
                 }
@@ -53,7 +54,7 @@ void Simulation::collision() {
     Matrix next_matrix = s;
     int rows = s.get_rows_num();
     int columns = s.get_columns_num();
-
+    double total_density = 0.0;
     for (size_t i = 1; i < rows - 1; i++) {
         for (size_t j = 1; j < columns - 1; j++) {
             Cell& next_cell = next_matrix.get_element(i, j);
@@ -62,9 +63,13 @@ void Simulation::collision() {
                 next_cell.calculate_velocity();
                 next_cell.calculate_fun_eq();
                 next_cell.calculate_fun_ex();
+                
+               total_density += s.get_element(i, j).get_density();
+               
             }
         }
     }
+    //cout << "Ca³kowita masa w iteracji: " << total_density << endl;
 
     s = next_matrix;
 }
