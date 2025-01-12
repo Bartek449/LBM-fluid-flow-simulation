@@ -36,17 +36,17 @@ const char* fragmentShaderSource = R"(
             vec3 colorY;
 
             if (u_x > 0.0) {
-                colorX = vec3(1.0, 1.0 - u_x * 1.5, 1.0 - u_x * 1.5); 
+                colorX = vec3(1.0, 1.0 - u_x * 15, 1.0 - u_x * 15); 
             } 
             else {
-                colorX = vec3(1.0 - (-u_x * 1.5), 1.0 - (-u_x * 1.5), 1.0); 
+                colorX = vec3(1.0 - (-u_x * 15), 1.0 - (-u_x * 15), 1.0); 
             }
 
             if (u_y > 0.0) {
-                colorY = vec3(1.0, 1.0 - u_y * 1.5, 1.0 - u_y * 1.5); 
+                colorY = vec3(1.0, 1.0 - u_y * 15, 1.0 - u_y * 15); 
             } 
             else {
-                colorY = vec3(1.0 - (-u_y * 1.5), 1.0 - (-u_y * 1.5), 1.0); 
+                colorY = vec3(1.0 - (-u_y * 15), 1.0 - (-u_y * 15), 1.0); 
             }
 
             vec3 combinedColor = clamp(colorX + colorY - vec3(1.0), 0.0, 1.0); 
@@ -230,11 +230,11 @@ int main() {
 
     //thread window1Thread(runSimulationWindow, "Simulation LBM", rows, columns, 800, 600, DisplayMode::VelocityBoth);
     thread window2Thread(runSimulationWindow, "Horizontal Velocity", rows, columns, 400, 280, DisplayMode::VelocityX);
-    //thread window3Thread(runSimulationWindow, "Vertical Velocity", rows, columns, 400, 280, DisplayMode::VelocityY);
+    thread window3Thread(runSimulationWindow, "Vertical Velocity", rows, columns, 400, 280, DisplayMode::VelocityY);
 
     //window1Thread.join();
     window2Thread.join();
-    //window3Thread.join();
+    window3Thread.join();
 
     return 0;
 }
