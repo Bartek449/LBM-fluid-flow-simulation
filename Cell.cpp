@@ -2,12 +2,7 @@
 
 Cell::Cell() : fun_in(EMPTY), fun_ex(EMPTY), fun_eq(EMPTY), velocity({ 0,0 }), density(0) {}
 
-Cell::Cell(array<double, 9> i) : fun_in(i), fun_ex(EMPTY), fun_eq(EMPTY), velocity({ 0,0 }), density(0){
-    calculate_density();
-    calculate_velocity();
-    calculate_fun_eq();
-    calculate_fun_ex();
-}
+Cell::Cell(array<double, 9> i) : fun_in(i), fun_ex(EMPTY), fun_eq(EMPTY), velocity({ 0,0 }), density(0){}
 
 
 void Cell::set_fun(FunType f, array<double,9> i) {

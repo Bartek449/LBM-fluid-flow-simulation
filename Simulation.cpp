@@ -12,16 +12,17 @@ void Simulation::streaming() {
     for (size_t i = 0; i < rows; i++) {
         for (size_t j = 0; j < columns; j++) {
             if (s.get_element(i, j).get_fun(FUN_IN) != WALL) {
-                next_matrix.get_element(i, j).set_fun(FUN_IN, EMPTY);
-                next_matrix.get_element(i, j).set_fun(FUN_EQ, EMPTY);
-                next_matrix.get_element(i, j).set_fun(FUN_EX, EMPTY);
+                Cell& cell = next_matrix.get_element(i, j); 
+                cell.set_fun(FUN_IN, EMPTY);
+                cell.set_fun(FUN_EQ, EMPTY);
+                cell.set_fun(FUN_EX, EMPTY);
             }
         }
     }
 
 
-    for (size_t i = 1; i < rows - 1; i++) {
-        for (size_t j = 1; j < columns - 1; j++) {
+    for (size_t i = 0; i < rows; i++) {
+        for (size_t j = 0; j < columns; j++) {
             Cell& current_cell = s.get_element(i, j);
             array<double, 9> fun_ex = current_cell.get_fun(FUN_EX);
 
@@ -51,25 +52,26 @@ void Simulation::streaming() {
 
 
 void Simulation::collision() {
-    Matrix next_matrix = s;
     int rows = s.get_rows_num();
     int columns = s.get_columns_num();
     double total_density = 0.0;
-    for (size_t i = 1; i < rows - 1; i++) {
-        for (size_t j = 1; j < columns - 1; j++) {
-            Cell& next_cell = next_matrix.get_element(i, j);
+    int y = 0;
+    for (size_t i = 0; i < rows; i++) {
+        for (size_t j = 0; j < columns; j++) {
+            Cell& next_cell = s.get_element(i, j);
             if (s.get_element(i, j).get_fun(FUN_IN) != WALL) {
                 next_cell.calculate_density();
                 next_cell.calculate_velocity();
                 next_cell.calculate_fun_eq();
                 next_cell.calculate_fun_ex();
                 
-               total_density += s.get_element(i, j).get_density();
+               total_density += next_cell.get_density();
+               //if (next_cell.get_velocity()[1] != 0)
+               //   y++;
                
             }
         }
     }
-    //cout << "Ca³kowita masa w iteracji: " << total_density << endl;
-
-    s = next_matrix;
+    cout << "Ca³kowita masa w iteracji: " << total_density << endl;
+    //cout << "Predkosc pionowa: " << y << endl;
 }

@@ -1,7 +1,5 @@
-#include <SFML/Window.hpp>
-#include <GL/glew.h>
 #include "Simulation.h"
-#include <thread>
+
 const char* vertexShaderSource = R"(
         #version 330 core
         layout(location = 0) in vec2 aPos;
@@ -28,7 +26,7 @@ const char* fragmentShaderSource = R"(
         float u_y = texture(uTextureY, texCoord).r;
 
         if (u_x == 111 && u_y == 111) {
-            FragColor = vec4(0.58, 0.29, 0.0, 1.0);
+            //FragColor = vec4(0.58, 0.29, 0.0, 1.0);
             FragColor = vec4(1.0, 1.0, 1.0, 1.0);
         } 
         else {
@@ -228,11 +226,11 @@ void runSimulationWindow(const string& windowName, int rows, int columns, int wi
 int main() {
     const int rows = 50, columns = 109;
 
-    //thread window1Thread(runSimulationWindow, "Simulation LBM", rows, columns, 800, 600, DisplayMode::VelocityBoth);
+    thread window1Thread(runSimulationWindow, "Simulation LBM", rows, columns, 800, 600, DisplayMode::VelocityBoth);
     thread window2Thread(runSimulationWindow, "Horizontal Velocity", rows, columns, 400, 280, DisplayMode::VelocityX);
     thread window3Thread(runSimulationWindow, "Vertical Velocity", rows, columns, 400, 280, DisplayMode::VelocityY);
 
-    //window1Thread.join();
+    window1Thread.join();
     window2Thread.join();
     window3Thread.join();
 

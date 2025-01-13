@@ -23,7 +23,7 @@ void Matrix::prepare_environment() {
 			if (i == 0 || i == rows - 1 || j == 0 || j == columns - 1 || (j == columns / 3 && (i < rows / 2 - 3 || i > rows / 2 + 3))) currentCell.set_fun(FUN_IN,WALL);
 			else {
 				if (i > 0 && i < rows - 1 && j > 0 && j < columns / 3) currentCell.set_density(1.0);
-				else currentCell.set_density(0.99);
+				else currentCell.set_density(0.96);
 
 				currentCell.calculate_fun_eq(); 
 				currentCell.set_fun(FUN_IN, currentCell.get_fun(FUN_EQ));

@@ -3,6 +3,7 @@
 #include <SFML/Window.hpp>
 #include <GL/glew.h>
 #include<iostream>
+#include <thread>
 #include <array>
 #include <random>
 using namespace std;
